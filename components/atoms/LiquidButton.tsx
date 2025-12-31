@@ -19,6 +19,8 @@ interface LiquidButtonProps {
     style?: ViewStyle;
 }
 
+import { useSoundSystem } from '../../hooks/useSoundSystem';
+
 export function LiquidButton({
     variant = 'dispatch',
     isFluid = false,
@@ -27,6 +29,15 @@ export function LiquidButton({
     style,
 }: LiquidButtonProps) {
     const isPressed = useSharedValue(0);
+    const { playSound } = useSoundSystem();
+
+    const handlePress = () => {
+        // Play tap sound
+        if (variant === 'dispatch') {
+            playSound('lock_on'); // Use lock_on or similar for major actions
+        }
+        if (onPress) onPress();
+    };
 
     // Animation for scale and fluidity
     const animatedContainerStyle = useAnimatedStyle(() => {
@@ -45,7 +56,7 @@ export function LiquidButton({
 
     return (
         <Pressable
-            onPress={onPress}
+            onPress={handlePress}
             onPressIn={() => (isPressed.value = 1)}
             onPressOut={() => (isPressed.value = 0)}
             style={[{ width: '100%' }, style]}

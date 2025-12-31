@@ -1,13 +1,20 @@
 import { BlurView } from 'expo-blur';
 import { MapPin, Share2 } from 'lucide-react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dimensions, Image, Modal, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withSpring,
+    withTiming
+} from 'react-native-reanimated';
 import { BLUR, COLORS, TYPOGRAPHY } from '../../constants/design-tokens';
 import { ChannelWell } from '../atoms/ChannelWell';
 import { FrostedInput } from '../atoms/FrostedInput';
 import { LiquidButton } from '../atoms/LiquidButton';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 interface DispatchSheetProps {
     visible: boolean;
@@ -17,50 +24,114 @@ interface DispatchSheetProps {
 }
 
 export function DispatchSheet({ visible, onClose, onSubmit, imageUri }: DispatchSheetProps) {
+    // Animation Values
+    const sheetY = useSharedValue(height);
+    const contentOpacity = useSharedValue(1);
+    const orbScale = useSharedValue(0); // 0 = not an orb, 1 = full orb, then shrinks?
+    // Actually, we want to morph the sheet container.
+    const borderRadius = useSharedValue(32);
+    const sheetWidth = useSharedValue(width);
+    const sheetLeft = useSharedValue(0);
+
+    useEffect(() => {
+        if (visible) {
+            // Reset state
+            sheetY.value = height;
+            contentOpacity.value = 1;
+            borderRadius.value = 32;
+            sheetWidth.value = width;
+            sheetLeft.value = 0;
+
+            // Slide Up
+            sheetY.value = withSpring(height * 0.25, { damping: 15 });
+        } else {
+            // Slide Down if just closed
+            sheetY.value = withTiming(height);
+        }
+    }, [visible]);
+
+    const handleSubmit = () => {
+        // 1. Fade out content
+        contentOpacity.value = withTiming(0, { duration: 200 });
+
+        // 2. Morph to Orb
+        const orbSize = 80;
+        borderRadius.value = withTiming(orbSize / 2, { duration: 500 });
+        sheetWidth.value = withSpring(orbSize, { damping: 12 });
+        // Center it momentarily? Or just shrink in place?
+        // Let's assume shrinking to center horizontally first
+        sheetLeft.value = withSpring((width - orbSize) / 2);
+
+        // 3. Move to bottom right (Impact Tab position approx)
+        // Impact tab is roughly at X: width - 80, Y: height - 100
+        const targetX = width - 80;
+        const targetY = height - 100;
+
+        setTimeout(() => {
+            sheetLeft.value = withSpring(targetX, { damping: 15 });
+            sheetY.value = withSpring(targetY, { damping: 15 });
+            // Shrink to nothing
+            sheetWidth.value = withDelay(300, withTiming(0));
+
+            // Trigger actual submit after animation
+            setTimeout(onSubmit, 800);
+        }, 400);
+    };
+
+    const sheetStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: sheetY.value }, { translateX: sheetLeft.value }],
+        width: sheetWidth.value,
+        borderRadius: borderRadius.value,
+    }));
+
+    // We need to apply this style to the container instead of simple styles
+
     return (
         <Modal
-            animationType="slide"
+            animationType="none" // Controlled by reanimated
             transparent={true}
-            visible={visible}
+            visible={visible} // Keep visible during animation
             onRequestClose={onClose}
         >
             <View style={styles.modalOverlay}>
                 {/* Touch overlay to close? Optional */}
 
-                <View style={styles.sheetContainer}>
+                <Animated.View style={[styles.sheetContainer, sheetStyle]}>
                     <BlurView intensity={BLUR.intensities.panel_overlay} style={StyleSheet.absoluteFill} tint="dark" />
 
-                    <View style={styles.handle} />
+                    <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
+                        <View style={styles.handle} />
 
-                    <View style={styles.content}>
-                        {/* Header / Title */}
-                        <Text style={styles.title}>Dispatch Report</Text>
+                        <View style={styles.content}>
+                            {/* Header / Title */}
+                            <Text style={styles.title}>Dispatch Report</Text>
 
-                        {/* Media Preview */}
-                        {imageUri && (
-                            <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-                        )}
+                            {/* Media Preview */}
+                            {imageUri && (
+                                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                            )}
 
-                        {/* Inputs */}
-                        <View style={styles.formContainer}>
-                            <FrostedInput placeholder="Category" value="Illegal Dumping" editable={false} />
-                            <FrostedInput placeholder="Description" multiline style={{ height: 80 }} />
+                            {/* Inputs */}
+                            <View style={styles.formContainer}>
+                                <FrostedInput placeholder="Category" value="Illegal Dumping" editable={false} />
+                                <FrostedInput placeholder="Description" multiline style={{ height: 80 }} />
+                            </View>
+
+                            {/* Channel Selector */}
+                            <Text style={styles.sectionLabel}>CHANNELS</Text>
+                            <View style={styles.channelGrid}>
+                                <ChannelWell isActive={true} onToggle={() => { }} icon={<MapPin size={24} color="#fff" />} />
+                                <ChannelWell isActive={false} onToggle={() => { }} icon={<Share2 size={24} color="#fff" />} />
+                            </View>
+
+                            {/* Submit CTA */}
+                            <View style={styles.footer}>
+                                <LiquidButton title="DISPATCH REPORT" variant="dispatch" onPress={handleSubmit} isFluid />
+                                <LiquidButton title="CANCEL" variant="ghost" onPress={onClose} style={{ marginTop: 12 }} />
+                            </View>
                         </View>
-
-                        {/* Channel Selector */}
-                        <Text style={styles.sectionLabel}>CHANNELS</Text>
-                        <View style={styles.channelGrid}>
-                            <ChannelWell isActive={true} onToggle={() => { }} icon={<MapPin size={24} color="#fff" />} />
-                            <ChannelWell isActive={false} onToggle={() => { }} icon={<Share2 size={24} color="#fff" />} />
-                        </View>
-
-                        {/* Submit CTA */}
-                        <View style={styles.footer}>
-                            <LiquidButton title="DISPATCH REPORT" variant="dispatch" onPress={onSubmit} isFluid />
-                            <LiquidButton title="CANCEL" variant="ghost" onPress={onClose} style={{ marginTop: 12 }} />
-                        </View>
-                    </View>
-                </View>
+                    </Animated.View>
+                </Animated.View>
             </View>
         </Modal>
     );
@@ -72,8 +143,10 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     sheetContainer: {
+        position: 'absolute', // Needed for free movement
+        top: 0, // We animate translateY from height instead of relying on flex layout
         width: '100%',
-        height: height * 0.75, // Occupy bottom 75%
+        height: height * 0.75,
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
         overflow: 'hidden',

@@ -1,6 +1,6 @@
 import { Flag, Hand, Shield } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../../constants/design-tokens';
 import { ChannelWell } from '../atoms/ChannelWell';
 
@@ -15,6 +15,12 @@ export function ValidationBar({ onSupport, onBack, onDispute }: ValidationBarPro
     const [backActive, setBackActive] = useState(false);
     const [disputeActive, setDisputeActive] = useState(false);
 
+    const [trustScoreIncrease, setTrustScoreIncrease] = useState(0);
+
+    // Mock Location / GPS Check
+    // In a real app, we'd check UserLocation vs ReportLocation
+    const canBack = true; // Assume we are close enough for demo
+
     // Toggle handlers
     const handleSupport = () => {
         setSupportActive(!supportActive);
@@ -22,7 +28,17 @@ export function ValidationBar({ onSupport, onBack, onDispute }: ValidationBarPro
     };
 
     const handleBack = () => {
-        setBackActive(!backActive);
+        if (!canBack) return; // Prevent backing if too far
+
+        const newValue = !backActive;
+        setBackActive(newValue);
+
+        if (newValue) {
+            // Show +5 Trust Score
+            setTrustScoreIncrease(5);
+            setTimeout(() => setTrustScoreIncrease(0), 2000);
+        }
+
         onBack();
     };
 
@@ -38,11 +54,16 @@ export function ValidationBar({ onSupport, onBack, onDispute }: ValidationBarPro
                 onToggle={handleSupport}
                 icon={<Hand size={20} color={COLORS.accents_liquid.pearl_text} />}
             />
-            <ChannelWell
-                isActive={backActive}
-                onToggle={handleBack}
-                icon={<Shield size={20} color={COLORS.accents_liquid.pearl_text} />}
-            />
+            <View>
+                <ChannelWell
+                    isActive={backActive}
+                    onToggle={handleBack}
+                    icon={<Shield size={20} color={COLORS.accents_liquid.pearl_text} />}
+                />
+                {trustScoreIncrease > 0 && (
+                    <Text style={styles.trustScorePopup}>+{trustScoreIncrease}</Text>
+                )}
+            </View>
             <ChannelWell
                 isActive={disputeActive}
                 onToggle={handleDispute}
@@ -58,6 +79,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         width: '100%',
         padding: 16,
-        // Optional: add a glass background for the bar itself if needed, but blueprint doesn't strictly say so.
     },
+    trustScorePopup: {
+        position: 'absolute',
+        top: -20,
+        alignSelf: 'center',
+        color: COLORS.accents_liquid.emerald_resolution,
+        fontWeight: 'bold',
+        fontSize: 14,
+    }
 });

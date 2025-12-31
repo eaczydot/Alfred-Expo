@@ -38,9 +38,9 @@ export function FeedCard({ type, title, description, location, style }: FeedCard
 
             {/* Actions */}
             <ValidationBar
-                onSupport={() => { }}
-                onBack={() => { }}
-                onDispute={() => { }}
+                onSupport={() => console.log('Support')}
+                onBack={() => console.log('Backing Report - GPS Verified')}
+                onDispute={() => console.log('Dispute')}
             />
         </View>
     );

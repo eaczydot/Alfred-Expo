@@ -21,7 +21,11 @@ export function ChannelWell({ isActive, onToggle, icon }: ChannelWellProps) {
     const activeValue = useSharedValue(isActive ? 1 : 0);
 
     React.useEffect(() => {
-        activeValue.value = withSpring(isActive ? 1 : 0, PHYSICS.springs.liquid_open);
+        activeValue.value = withSpring(isActive ? 1 : 0, {
+            damping: PHYSICS.springs.liquid_open.damping,
+            mass: PHYSICS.springs.liquid_open.mass,
+            stiffness: PHYSICS.springs.liquid_open.stiffness
+        });
     }, [isActive]);
 
     const fillStyle = useAnimatedStyle(() => {

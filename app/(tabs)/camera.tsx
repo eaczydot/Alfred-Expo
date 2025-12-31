@@ -1,34 +1,44 @@
+import { BlurView } from 'expo-blur';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { RefractivePill } from '../../components/molecules/RefractivePill';
 import { DispatchSheet } from '../../components/organisms/DispatchSheet';
 import { ScannerHUD } from '../../components/organisms/ScannerHUD';
 import { COLORS } from '../../constants/design-tokens';
 
+import { useSoundSystem } from '../../hooks/useSoundSystem';
+
 export default function CameraScreen() {
     const [permission, requestPermission] = useCameraPermissions();
     const [isSheetVisible, setIsSheetVisible] = useState(false);
+    const [isFrozen, setIsFrozen] = useState(false);
     const [detectedObject, setDetectedObject] = useState<{ x: number, y: number } | null>(null);
     const router = useRouter();
+    const { playSound } = useSoundSystem();
 
     useEffect(() => {
         if (!permission?.granted) {
             requestPermission();
         }
+        // Play ambient hum
+        playSound('scan_hum');
     }, [permission]);
 
     // Mock detection simulation
     const simulateDetection = () => {
         // 1. Simulate finding an object
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        playSound('lock_on');
         setDetectedObject({ x: 150, y: 300 });
 
-        // 2. Open dispatch sheet after short delay
+        // 2. Open dispatch sheet after short delay, and freeze
         setTimeout(() => {
+            setIsFrozen(true);
             setIsSheetVisible(true);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }, 1500);
@@ -42,8 +52,20 @@ export default function CameraScreen() {
         <View style={styles.container}>
             <CameraView style={StyleSheet.absoluteFill} facing="back" />
 
-            {/* HUD Overlay */}
-            <ScannerHUD />
+            {/* Freeze Blur Overlay */}
+            {isFrozen && (
+                <Animated.View entering={FadeIn.duration(400)} exiting={FadeOut} style={StyleSheet.absoluteFill}>
+                    <BlurView intensity={20} style={StyleSheet.absoluteFill} tint="dark" />
+                </Animated.View>
+            )}
+
+            {/* HUD Overlay - Hide when frozen for clean look? Or keep it? keeping it for now but maybe dimmed */}
+            {!isFrozen && <ScannerHUD />}
+
+            {/* Particle System Mock (Static for now, implies scanning) */}
+            {!isFrozen && (
+                <View style={styles.particleField} pointerEvents="none" />
+            )}
 
             {/* Mock Object Label (RefractivePill) */}
             {detectedObject && (
@@ -51,6 +73,7 @@ export default function CameraScreen() {
                     <RefractivePill
                         label="ILLEGAL DUMPING"
                         score={85}
+                        confidence={0.95}
                         icon={<Trash2 size={14} color="#fff" />}
                     />
                 </View>
@@ -63,10 +86,12 @@ export default function CameraScreen() {
                 visible={isSheetVisible}
                 onClose={() => {
                     setIsSheetVisible(false);
+                    setIsFrozen(false);
                     setDetectedObject(null);
                 }}
                 onSubmit={() => {
                     setIsSheetVisible(false);
+                    setIsFrozen(false);
                     setDetectedObject(null);
                     // Navigate to Impact or animate success
                     router.navigate('/(tabs)/impact');
@@ -84,5 +109,9 @@ const styles = StyleSheet.create({
     },
     pillContainer: {
         position: 'absolute',
+    },
+    particleField: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(56, 189, 248, 0.05)', // Very subtle azure tint
     }
 });

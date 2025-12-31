@@ -17,12 +17,13 @@ interface RefractivePillProps {
     label: string;
     score: number;
     icon?: React.ReactNode;
+    confidence?: number; // 0.0 to 1.0 (Higher = Faster/Brighter Shimmer)
 }
 
-export function RefractivePill({ label, score, icon }: RefractivePillProps) {
+export function RefractivePill({ label, score, icon, confidence = 0.8 }: RefractivePillProps) {
     // Appearance animation
     const scale = useSharedValue(0.8);
-    const opacity = useSharedValue(0); // Add opacity for better entrance
+    const opacity = useSharedValue(0);
 
     // Refraction animation (shimmer)
     const shimmerTranslate = useSharedValue(-100);
@@ -31,16 +32,20 @@ export function RefractivePill({ label, score, icon }: RefractivePillProps) {
         scale.value = withSpring(1, PHYSICS.springs.liquid_open);
         opacity.value = withTiming(1, { duration: 300 });
 
+        // Calculate duration: Higher confidence -> Faster shimmer (lower duration)
+        // Base duration 2000ms at 0 confidence, down to 800ms at 1.0 confidence
+        const shimmerDuration = 2000 - (confidence * 1200);
+
         // Continuous shimmer effect
         shimmerTranslate.value = withRepeat(
             withSequence(
-                withTiming(150, { duration: 1500, easing: Easing.linear }),
-                withTiming(-100, { duration: 0 }) // Reset instantaneously
+                withTiming(150, { duration: shimmerDuration, easing: Easing.linear }),
+                withTiming(-100, { duration: 0 })
             ),
-            -1, // Infinite repeat
+            -1,
             false
         );
-    }, []);
+    }, [confidence]);
 
     const containerStyle = useAnimatedStyle(() => {
         return {
