@@ -13,7 +13,7 @@
     },
     "simulator": {
       "developmentClient": true,
-      "distribution": "none",
+      "distribution": "internal",
       "ios": {
         "simulator": true
       }
