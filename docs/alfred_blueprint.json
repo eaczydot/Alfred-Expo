@@ -1,0 +1,284 @@
+{
+    "ALFRED_EXPO_BLUEPRINT": {
+        "project_meta": {
+            "name": "Alfred",
+            "slug": "alfred-civic-glass",
+            "version": "1.0.0",
+            "framework": "Expo SDK 50+",
+            "language": "TypeScript",
+            "aesthetic_target": "Liquid Glassmorphism",
+            "core_mechanic": "Capture-First Civic Dispatch"
+        },
+        "TECH_STACK_DEPENDENCIES": {
+            "core_ui": [
+                "expo-blur",
+                "expo-haptics",
+                "react-native-reanimated",
+                "react-native-gesture-handler",
+                "expo-linear-gradient",
+                "moti"
+            ],
+            "camera_vision": [
+                "expo-camera",
+                "react-native-vision-camera (if advanced frame processing needed)",
+                "tensorflow/tfjs-react-native (for local object detection)"
+            ],
+            "navigation": [
+                "expo-router (v3)",
+                "react-native-screens"
+            ],
+            "state": [
+                "zustand (for liquid state management)",
+                "tanstack-query (for API sync)"
+            ]
+        },
+        "DESIGN_TOKENS": {
+            "colors": {
+                "foundations": {
+                    "void": "#000000",
+                    "deep_sludge": "#0A0A0C",
+                    "glass_border": "rgba(255, 255, 255, 0.12)",
+                    "glass_shine": "rgba(255, 255, 255, 0.08)"
+                },
+                "accents_liquid": {
+                    "azure_primary": "rgba(56, 189, 248, 0.9)",
+                    "azure_glow": "rgba(56, 189, 248, 0.4)",
+                    "emerald_resolution": "rgba(52, 211, 153, 0.8)",
+                    "amber_alert": "rgba(251, 191, 36, 0.8)",
+                    "pearl_text": "rgba(255, 255, 255, 0.92)",
+                    "ghost_text": "rgba(255, 255, 255, 0.45)"
+                }
+            },
+            "typography": {
+                "families": {
+                    "primary": "Inter-Tight_500Medium",
+                    "display": "Inter-Tight_800ExtraBold",
+                    "mono": "JetBrainsMono_400Regular"
+                },
+                "styles": {
+                    "impact_score_display": {
+                        "fontSize": 42,
+                        "lineHeight": 48,
+                        "letterSpacing": -1.5,
+                        "color": "white",
+                        "textShadow": "0px 0px 20px rgba(56, 189, 248, 0.5)"
+                    },
+                    "lens_hud_label": {
+                        "fontSize": 12,
+                        "fontFamily": "JetBrainsMono_400Regular",
+                        "textTransform": "uppercase",
+                        "letterSpacing": 1.2,
+                        "color": "rgba(255,255,255,0.8)"
+                    }
+                }
+            },
+            "physics_springs": {
+                "liquid_open": {
+                    "damping": 15,
+                    "mass": 1,
+                    "stiffness": 120
+                },
+                "glass_tap": {
+                    "damping": 10,
+                    "mass": 0.5,
+                    "stiffness": 300
+                }
+            },
+            "blur_intensities": {
+                "panel_thin": 20,
+                "panel_thick": 50,
+                "panel_overlay": 80
+            }
+        },
+        "COMPONENT_SYSTEM": {
+            "atoms": {
+                "LiquidButton": {
+                    "props": {
+                        "variant": "'dispatch' | 'ghost'",
+                        "isFluid": "boolean (animates gradient on press)"
+                    },
+                    "style": "Container with overflow:hidden. Inner <LinearGradient> that shifts coordinate values via Reanimated shared values on pressIn/pressOut."
+                },
+                "FrostedInput": {
+                    "style": "TextInput wrapped in <BlurView intensity={20}>. Background color rgba(255,255,255,0.05). Border color rgba(255,255,255,0.1).",
+                    "focus_behavior": "Border opacity animates to 0.6."
+                },
+                "ChannelWell": {
+                    "description": "The toggle for cross-posting (311, Nextdoor).",
+                    "visual": "A 50x50 circle. Default: Frosted glass. Active: Fills vertically with Azure liquid animation.",
+                    "icon": "SVG centered, white."
+                }
+            },
+            "molecules": {
+                "RefractivePill": {
+                    "adaptation": "HeroStuff's Price Tag.",
+                    "usage": "Appears over detected objects.",
+                    "layout": "Row: [Icon] [Impact Score Range] [Chevron]",
+                    "animation": "ScaleIn from 0.8 to 1.0 with spring. Background is a moving gradient simulating light refraction."
+                },
+                "ValidationBar": {
+                    "usage": "In Feed Cards.",
+                    "layout": "Row: [Support (Handshake)] [Back (Shield)] [Dispute (Flag)]",
+                    "interaction": "Each icon acts as a liquid toggle. 'Backing' requires GPS verification."
+                }
+            },
+            "organisms": {
+                "ScannerHUD": {
+                    "components": [
+                        "Reticle (Center)",
+                        "ShimmerBeam (Vertical scanning line)",
+                        "ParticleSystem (Canvas-based dots on detected objects)",
+                        "ScoreTicker (Top center 'Potential Impact')"
+                    ]
+                },
+                "DispatchSheet": {
+                    "behavior": "Bottom sheet modal.",
+                    "sections": [
+                        "MediaPreview (Blurred backdrop)",
+                        "AIDraft (Title, Desc, Category inputs)",
+                        "ChannelSelector (Grid of ChannelWells)",
+                        "SubmitCTA (Full width LiquidButton)"
+                    ]
+                }
+            }
+        },
+        "NAVIGATION_STRUCTURE": {
+            "type": "Expo Router (File-based)",
+            "routes": {
+                "app/_layout.tsx": "Stack Navigator (Headerless)",
+                "app/index.tsx": "Redirects to /camera or /onboarding",
+                "app/(tabs)/_layout.tsx": "Custom Floating Glass Tab Bar",
+                "app/(tabs)/camera.tsx": "The 'Alfred Lens' (Main View)",
+                "app/(tabs)/feed.tsx": "Community Feed (The Marketplace)",
+                "app/(tabs)/impact.tsx": "User Profile (My Stash)",
+                "app/report/[id].tsx": "Draft/Edit Screen (Modal)",
+                "app/pool/[id].tsx": "Gig/Service Detail Screen"
+            }
+        },
+        "CORE_USER_FLOWS": {
+            "ONBOARDING_FLOW": {
+                "screens": [
+                    {
+                        "id": "Splash",
+                        "ui": "Logo breathing with liquid glow.",
+                        "action": "Auto-transition."
+                    },
+                    {
+                        "id": "Permissions",
+                        "ui": "Glass cards asking for 'Vision' (Camera) and 'Presence' (Location).",
+                        "copy": "Alfred needs to see the neighborhood to improve it."
+                    },
+                    {
+                        "id": "Mission_Select",
+                        "ui": "Select your role: 'Reporter', 'Guardian' (Verifier), 'Provider' (Pool Worker)."
+                    }
+                ]
+            },
+            "CAPTURE_AND_DISPATCH_FLOW": {
+                "step_1_lens": {
+                    "screen": "camera.tsx",
+                    "logic": "Camera active. TFJS model runs object detection (potholes, trash).",
+                    "visual": "Refractive Beam scans up/down. When object detected -> Haptic triggers, RefractivePill appears at coordinates."
+                },
+                "step_2_freeze": {
+                    "action": "User taps Shutter.",
+                    "logic": "Capture photo. Generate temporary ID. Pass image to AI service (Mock/Real).",
+                    "visual": "Screen freezes, blurs slightly. DispatchSheet slides up."
+                },
+                "step_3_draft": {
+                    "screen": "DispatchSheet (Component)",
+                    "logic": "AI populates: Title, Category, Severity, Description.",
+                    "ui": "User sees 'Identified: Illegal Dumping'. User toggles 'Nextdoor' well (fill animation). Impact Score updates: 85 -> 120."
+                },
+                "step_4_post": {
+                    "action": "Tap 'Dispatch Report'.",
+                    "visual": "Sheet morphs into a liquid orb, flies into the 'Impact' tab.",
+                    "backend": "Fire-and-forget POST request. App returns to Camera immediately."
+                }
+            },
+            "POOL_AND_VALIDATION_FLOW": {
+                "step_1_feed": {
+                    "screen": "feed.tsx",
+                    "ui": "Masonry grid of glass tiles.",
+                    "content": "Mix of Reports (Needs Fixing) and Gigs (Needs Doing)."
+                },
+                "step_2_interaction": {
+                    "action": "User taps 'Back' on a report.",
+                    "logic": "Check User Location vs Report Location. If <50m, allow Back.",
+                    "visual": "Shield icon fills with Emerald liquid. Trust Score increments."
+                }
+            }
+        },
+        "DATA_MODEL_SCHEMA": {
+            "Incident": {
+                "id": "UUID",
+                "image_url": "S3_URL",
+                "ai_metadata": {
+                    "class": "pothole",
+                    "confidence": 0.95,
+                    "suggested_channels": [
+                        "311",
+                        "waze"
+                    ]
+                },
+                "user_input": {
+                    "title": "String",
+                    "description": "String",
+                    "severity": 1-10
+                },
+                "channels": {
+                    "311": {
+                        "status": "pending",
+                        "ticket_id": null
+                    },
+                    "nextdoor": {
+                        "status": "posted",
+                        "url": "..."
+                    },
+                    "alfred_feed": {
+                        "status": "live"
+                    }
+                },
+                "validation": {
+                    "support_count": "Int",
+                    "back_count": "Int (Weighted)",
+                    "dispute_count": "Int"
+                },
+                "impact_score": {
+                    "potential": "Int",
+                    "realized": "Int"
+                }
+            },
+            "PoolGig": {
+                "id": "UUID",
+                "linked_incident_id": "UUID",
+                "type": "cleanup | repair | transport",
+                "bounty_credits": "Int",
+                "status": "open | claimed | verified"
+            }
+        },
+        "DESIGN_PRINCIPLES_UX": {
+            "Capture_First_Philosophy": {
+                "rule": "The camera is the home screen. No tapping required to start reporting.",
+                "hero_stuff_alignment": "Just like HeroStuff starts in scan mode, Alfred starts in 'Civic Scan' mode."
+            },
+            "AI_Transparency": {
+                "rule": "Show, don't tell. Instead of a spinner saying 'Thinking...', show particles converging on the object being analyzed.",
+                "visual": "Refractive shimmer intensifies on the object of interest."
+            },
+            "Cross_Post_Frictionless": {
+                "rule": "Channel selection must be sticky. If I posted to 311 last time, keep it toggled on.",
+                "visual": "Saved 'Dispatch Profiles' (e.g., 'City Issues', 'Community Alert')."
+            }
+        },
+        "ASSET_REQUIRMENTS": {
+            "icons": "Lucide-React-Native (Stroke width 1.5, White)",
+            "fonts": "Inter Tight (Google Fonts)",
+            "sounds": [
+                "scan_hum.mp3 (Looping background)",
+                "lock_on.wav (Short high ping)",
+                "liquid_success.wav (Water splash)"
+            ]
+        }
+    }
+}
