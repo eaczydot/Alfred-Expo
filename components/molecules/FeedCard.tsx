@@ -18,7 +18,15 @@ export function FeedCard({ type, title, description, location, style }: FeedCard
 
     return (
         <View style={[styles.container, style]}>
-            <BlurView intensity={BLUR.intensities.panel_thin} style={StyleSheet.absoluteFill} tint="dark" />
+            {/* Background Glow */}
+            <View
+                style={[
+                    styles.glow,
+                    { backgroundColor: accentColor, opacity: isGig ? 0.05 : 0.08 }
+                ]}
+            />
+
+            <BlurView intensity={BLUR.intensities.panel_thick} style={StyleSheet.absoluteFill} tint="dark" />
 
             {/* Content */}
             <View style={styles.content}>
@@ -51,9 +59,13 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.08)',
-        backgroundColor: 'rgba(255,255,255,0.02)',
+        borderColor: 'rgba(255,255,255,0.12)',
+        backgroundColor: 'rgba(10, 10, 12, 0.4)',
         marginBottom: 16,
+    },
+    glow: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 24,
     },
     content: {
         padding: 16,

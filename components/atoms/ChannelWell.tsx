@@ -3,12 +3,18 @@ import { LinearGradient } from 'expo-linear-gradient'; // Add import for LinearG
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
+    Easing,
     interpolate,
     useAnimatedStyle,
     useSharedValue,
+    withRepeat,
     withSpring,
+    withTiming,
 } from 'react-native-reanimated';
-import { COLORS, PHYSICS } from '../../constants/design-tokens';
+import { COLORS as TOKENS_COLORS, PHYSICS as TOKENS_PHYSICS } from '../../constants/design-tokens';
+
+const COLORS = TOKENS_COLORS;
+const PHYSICS = TOKENS_PHYSICS;
 
 interface ChannelWellProps {
     isActive: boolean;
@@ -19,6 +25,19 @@ interface ChannelWellProps {
 export function ChannelWell({ isActive, onToggle, icon }: ChannelWellProps) {
     // Animation value: 0 = inactive, 1 = active
     const activeValue = useSharedValue(isActive ? 1 : 0);
+    const waveValue = useSharedValue(0);
+
+    React.useEffect(() => {
+        if (isActive) {
+            waveValue.value = withRepeat(
+                withTiming(1, { duration: 1500, easing: Easing.bezier(0.4, 0, 0.6, 1) }),
+                -1,
+                true
+            );
+        } else {
+            waveValue.value = 0;
+        }
+    }, [isActive]);
 
     React.useEffect(() => {
         activeValue.value = withSpring(isActive ? 1 : 0, {
@@ -31,8 +50,14 @@ export function ChannelWell({ isActive, onToggle, icon }: ChannelWellProps) {
     const fillStyle = useAnimatedStyle(() => {
         // Animate the height/scale of the "liquid" filling up
         const translateY = interpolate(activeValue.value, [0, 1], [50, 0]);
+        const skewX = isActive ? interpolate(waveValue.value, [0, 1], [-5, 5]) : 0;
+
         return {
-            transform: [{ translateY }],
+            transform: [
+                { translateY },
+                { skewX: `${skewX}deg` }
+            ],
+            opacity: activeValue.value,
         };
     });
 

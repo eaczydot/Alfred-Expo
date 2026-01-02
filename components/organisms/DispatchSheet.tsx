@@ -9,10 +9,15 @@ import Animated, {
     withSpring,
     withTiming
 } from 'react-native-reanimated';
-import { BLUR, COLORS, TYPOGRAPHY } from '../../constants/design-tokens';
+import { BLUR as TOKENS_BLUR, COLORS as TOKENS_COLORS, PHYSICS as TOKENS_PHYSICS, TYPOGRAPHY as TOKENS_TYPOGRAPHY } from '../../constants/design-tokens';
 import { ChannelWell } from '../atoms/ChannelWell';
 import { FrostedInput } from '../atoms/FrostedInput';
 import { LiquidButton } from '../atoms/LiquidButton';
+
+const BLUR = TOKENS_BLUR;
+const COLORS = TOKENS_COLORS;
+const PHYSICS = TOKENS_PHYSICS;
+const TYPOGRAPHY = TOKENS_TYPOGRAPHY;
 
 const { height, width } = Dimensions.get('window');
 
@@ -114,7 +119,7 @@ export function DispatchSheet({ visible, onClose, onSubmit, imageUri }: Dispatch
                             {/* Inputs */}
                             <View style={styles.formContainer}>
                                 <FrostedInput placeholder="Category" value="Illegal Dumping" editable={false} />
-                                <FrostedInput placeholder="Description" multiline style={{ height: 80 }} />
+                                <FrostedInput placeholder="Description" multiline containerStyle={{ height: 80 }} />
                             </View>
 
                             {/* Channel Selector */}

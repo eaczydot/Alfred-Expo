@@ -32,7 +32,7 @@ export default function CameraScreen() {
     // Mock detection simulation
     const simulateDetection = () => {
         // 1. Simulate finding an object
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         playSound('lock_on');
         setDetectedObject({ x: 150, y: 300 });
 
@@ -40,9 +40,15 @@ export default function CameraScreen() {
         setTimeout(() => {
             setIsFrozen(true);
             setIsSheetVisible(true);
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }, 1500);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }, 2000);
     };
+
+    useEffect(() => {
+        // Auto-simulate scanning when screen focused
+        const timer = setTimeout(simulateDetection, 3000);
+        return () => clearTimeout(timer);
+    }, []);
 
     if (!permission?.granted) {
         return <View style={styles.container} />;
@@ -59,8 +65,8 @@ export default function CameraScreen() {
                 </Animated.View>
             )}
 
-            {/* HUD Overlay - Hide when frozen for clean look? Or keep it? keeping it for now but maybe dimmed */}
-            {!isFrozen && <ScannerHUD />}
+            {/* HUD Overlay */}
+            <ScannerHUD isDetecting={!!detectedObject} />
 
             {/* Particle System Mock (Static for now, implies scanning) */}
             {!isFrozen && (
@@ -79,8 +85,10 @@ export default function CameraScreen() {
                 </View>
             )}
 
-            {/* Invisible trigger area for demo purposes */}
-            <TouchableOpacity style={StyleSheet.absoluteFill} onPress={simulateDetection} activeOpacity={1} />
+            {/* Interaction Layer */}
+            {!detectedObject && (
+                <TouchableOpacity style={StyleSheet.absoluteFill} onPress={simulateDetection} activeOpacity={1} />
+            )}
 
             <DispatchSheet
                 visible={isSheetVisible}

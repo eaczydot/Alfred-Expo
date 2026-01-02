@@ -75,9 +75,17 @@ export function RefractivePill({ label, score, icon, confidence = 0.8 }: Refract
             <View style={styles.shimmerMask}>
                 <Animated.View style={[styles.shimmer, shimmerStyle]}>
                     <LinearGradient
-                        colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+                        colors={[
+                            'transparent',
+                            'rgba(255, 255, 255, 0.05)',
+                            'rgba(56, 189, 248, 0.4)', // Azure glow in the shimmer
+                            'rgba(255, 255, 255, 0.6)',
+                            'rgba(52, 211, 153, 0.4)', // Emerald hint
+                            'rgba(255, 255, 255, 0.05)',
+                            'transparent'
+                        ]}
                         start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
+                        end={{ x: 1, y: 0.5 }}
                         style={StyleSheet.absoluteFill}
                     />
                 </Animated.View>

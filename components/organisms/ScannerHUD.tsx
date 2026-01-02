@@ -8,47 +8,112 @@ import Animated, {
     useSharedValue,
     withRepeat,
     withSequence,
+    withSpring,
     withTiming,
 } from 'react-native-reanimated';
 import { COLORS, TYPOGRAPHY } from '../../constants/design-tokens';
 
 const { width, height } = Dimensions.get('window');
 
-export function ScannerHUD() {
+const PARTICLE_COUNT = 15;
+
+const Particle = ({ index }: { index: number }) => {
+    const x = useSharedValue(Math.random() * width);
+    const y = useSharedValue(Math.random() * height);
+    const opacity = useSharedValue(0);
+
+    useEffect(() => {
+        const animate = () => {
+            x.value = Math.random() * width;
+            y.value = Math.random() * height;
+            opacity.value = withSequence(
+                withTiming(0.4, { duration: 1000 }),
+                withTiming(0, { duration: 1000 })
+            );
+        };
+
+        const interval = setInterval(animate, 2000 + Math.random() * 2000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const style = useAnimatedStyle(() => ({
+        position: 'absolute',
+        left: x.value,
+        top: y.value,
+        width: 2,
+        height: 2,
+        borderRadius: 1,
+        backgroundColor: COLORS.accents_liquid.azure_primary,
+        opacity: opacity.value,
+    }));
+
+    return <Animated.View style={style} />;
+};
+
+export function ScannerHUD({ isDetecting = false }: { isDetecting?: boolean }) {
     const beamPosition = useSharedValue(0);
+    const reticleScale = useSharedValue(1);
 
     useEffect(() => {
         beamPosition.value = withRepeat(
             withSequence(
-                withTiming(height, { duration: 2500, easing: Easing.linear }),
-                withTiming(0, { duration: 2500, easing: Easing.linear })
+                withTiming(height, { duration: isDetecting ? 1500 : 3000, easing: Easing.linear }),
+                withTiming(0, { duration: isDetecting ? 1500 : 3000, easing: Easing.linear })
             ),
             -1,
             false
         );
-    }, []);
+    }, [isDetecting]);
+
+    useEffect(() => {
+        if (isDetecting) {
+            reticleScale.value = withRepeat(
+                withSequence(
+                    withSpring(1.05, { damping: 2, stiffness: 80 }),
+                    withSpring(1, { damping: 2, stiffness: 80 })
+                ),
+                -1,
+                true
+            );
+        } else {
+            reticleScale.value = withSpring(1);
+        }
+    }, [isDetecting]);
 
     const beamStyle = useAnimatedStyle(() => {
         return {
             transform: [{ translateY: beamPosition.value }],
+            opacity: isDetecting ? 0.8 : 0.3,
         };
     });
+
+    const reticleStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: reticleScale.value }],
+        opacity: withTiming(isDetecting ? 1 : 0.3),
+    }));
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
 
+            {/* Particle Foundation */}
+            {Array.from({ length: PARTICLE_COUNT }).map((_, i) => (
+                <Particle key={i} index={i} />
+            ))}
+
             {/* Score Ticker - Top Center */}
             <View style={styles.scoreContainer}>
                 <Text style={styles.scoreLabel}>POTENTIAL IMPACT</Text>
-                <Text style={styles.scoreValue}>85</Text>
+                <Text style={[styles.scoreValue, isDetecting && styles.scoreDetecting]}>
+                    {isDetecting ? '120' : '85'}
+                </Text>
             </View>
 
             {/* Reticle - Center */}
-            <View style={styles.reticleContainer}>
-                <Scan size={200} color="rgba(255,255,255,0.3)" strokeWidth={1} />
+            <Animated.View style={[styles.reticleContainer, reticleStyle]}>
+                <Scan size={200} color={isDetecting ? COLORS.accents_liquid.azure_primary : "rgba(255,255,255,0.3)"} strokeWidth={1} />
                 {/* Center Dot */}
-                <View style={styles.centerDot} />
-            </View>
+                <View style={[styles.centerDot, isDetecting && styles.centerDotDetecting]} />
+            </Animated.View>
 
             {/* Shimmer Beam */}
             <Animated.View style={[styles.beam, beamStyle]}>
@@ -99,6 +164,16 @@ const styles = StyleSheet.create({
         shadowColor: COLORS.accents_liquid.azure_primary,
         shadowOpacity: 0.8,
         shadowRadius: 10,
+    },
+    centerDotDetecting: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        shadowRadius: 20,
+    },
+    scoreDetecting: {
+        color: COLORS.accents_liquid.azure_primary,
+        fontSize: 48,
     },
     beam: {
         position: 'absolute',

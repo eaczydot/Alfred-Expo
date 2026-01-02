@@ -1,8 +1,3 @@
-/**
- * Alfred Design Tokens
- * Aesthetic Target: Liquid Glassmorphism
- */
-
 export const COLORS = {
     foundations: {
         void: "#000000",

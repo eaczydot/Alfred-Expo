@@ -5,18 +5,25 @@ import React, { useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { LiquidButton } from '../components/atoms/LiquidButton';
-import { COLORS, TYPOGRAPHY } from '../constants/design-tokens';
+import { COLORS as TOKENS_COLORS, TYPOGRAPHY as TOKENS_TYPOGRAPHY } from '../constants/design-tokens';
+import { useAppState } from '../store/useAppState';
+
+const COLORS = TOKENS_COLORS || { foundations: { void: '#000000' }, accents_liquid: { azure_primary: '#38bdf8', ghost_text: 'rgba(255,255,255,0.45)' } };
+const TYPOGRAPHY = TOKENS_TYPOGRAPHY || { families: { primary: 'System', display: 'System' } };
 
 const { width } = Dimensions.get('window');
 
 export default function OnboardingScreen() {
     const [step, setStep] = useState(0);
     const router = useRouter();
+    const { setHasSeenOnboarding, setUserRole } = useAppState();
 
-    const handleNext = () => {
+    const handleNext = (role?: 'reporter' | 'guardian' | 'provider') => {
         if (step < 2) {
             setStep(step + 1);
         } else {
+            setHasSeenOnboarding(true);
+            if (role) setUserRole(role);
             router.replace('/(tabs)/camera');
         }
     };
@@ -58,10 +65,10 @@ export default function OnboardingScreen() {
                         <Text style={styles.description}>
                             Are you a Reporter, a Guardian, or a Provider?
                         </Text>
-                        {/* Mock Selection */}
+                        {/* Selection */}
                         <View style={{ gap: 10, width: '100%', marginTop: 20 }}>
-                            <LiquidButton title="REPORTER" onPress={handleNext} variant="ghost" />
-                            <LiquidButton title="GUARDIAN" onPress={handleNext} variant="ghost" />
+                            <LiquidButton title="REPORTER" onPress={() => handleNext('reporter')} variant="ghost" />
+                            <LiquidButton title="GUARDIAN" onPress={() => handleNext('guardian')} variant="ghost" />
                         </View>
                     </Animated.View>
                 );
